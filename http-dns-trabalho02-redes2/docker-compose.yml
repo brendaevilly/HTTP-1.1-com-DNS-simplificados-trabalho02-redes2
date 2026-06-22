@@ -1,0 +1,59 @@
+services:
+  dns:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redes2-t02-dns
+    hostname: dns
+    networks:
+      redes_net:
+        ipv4_address: 172.29.0.5
+    command: python3 src/dns_server.py --host 0.0.0.0 --port 53
+    volumes:
+      - .:/app
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redes2-t02-server
+    hostname: server
+    cap_add:
+      - NET_ADMIN
+    depends_on:
+      - dns
+    networks:
+      redes_net:
+        ipv4_address: 172.29.0.10
+    command: >
+      bash -c "python3 scripts/generate_www_files.py --all &&
+             python3 src/http_tcp_server.py --host 0.0.0.0 &
+             python3 src/http_rudp_server.py --host 0.0.0.0 &
+             wait"
+    volumes:
+      - .:/app
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redes2-t02-client
+    hostname: client
+    cap_add:
+      - NET_ADMIN
+    depends_on:
+      - server
+    networks:
+      redes_net:
+        ipv4_address: 172.29.0.20
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+
+networks:
+  redes_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
