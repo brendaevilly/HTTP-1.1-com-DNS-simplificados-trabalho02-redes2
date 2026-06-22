@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+logs/*.jsonl
+received/*
+!received/.gitkeep
+captures/*.pcap
+analysis/output/*
+!analysis/output/.gitkeep
+www/files/*.bin
