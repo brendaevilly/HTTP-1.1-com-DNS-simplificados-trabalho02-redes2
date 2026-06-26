@@ -273,10 +273,12 @@ def main() -> None:
         )
     else:
         print(f"[{args.mode.upper()}] ERRO: {metrics.error_message}", file=sys.stderr)
-        sys.exit(1)
 
     if not args.no_log:
         MetricsLogger().log(metrics)
+
+    if not metrics.success:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,380 @@
+brenda@brenda-Inspiron-15-3511:~/Área de trabalho/trabalho-02-redes2$ cd http-dns-trabalho02-redes2
+cp .env.example .env
+chmod +x run_docker_tests.sh scripts/*.sh
+./run_docker_tests.sh   # benchmark completo: 10 execuções × 4 arquivos × 2 modos × 3 cenários
+[+] Building 2.2s (17/17) FINISHED                                                                                                             
+ => [internal] load local bake definitions                                                                                                0.0s
+ => => reading from stdin 1.74kB                                                                                                          0.0s
+ => [server internal] load build definition from Dockerfile                                                                               0.0s
+ => => transferring dockerfile: 446B                                                                                                      0.0s
+ => [server internal] load metadata for docker.io/library/ubuntu:22.04                                                                    1.1s
+ => [client internal] load .dockerignore                                                                                                  0.0s
+ => => transferring context: 2B                                                                                                           0.0s
+ => [client 1/6] FROM docker.io/library/ubuntu:22.04@sha256:4f838adc7181d9039ac795a7d0aba05a9bd9ecd480d294483169c5def983b64d              0.1s
+ => => resolve docker.io/library/ubuntu:22.04@sha256:4f838adc7181d9039ac795a7d0aba05a9bd9ecd480d294483169c5def983b64d                     0.0s
+ => [server internal] load build context                                                                                                  0.1s
+ => => transferring context: 12.82MB                                                                                                      0.1s
+ => CACHED [server 2/6] RUN apt-get update && apt-get install -y --no-install-recommends     python3     python3-pip     iproute2     tc  0.0s
+ => CACHED [server 3/6] WORKDIR /app                                                                                                      0.0s
+ => CACHED [server 4/6] COPY requirements.txt /app/                                                                                       0.0s
+ => CACHED [server 5/6] RUN pip3 install --no-cache-dir -r requirements.txt                                                               0.0s
+ => [server 6/6] COPY . /app/                                                                                                             0.1s
+ => [dns] exporting to image                                                                                                              0.5s
+ => => exporting layers                                                                                                                   0.1s
+ => => exporting manifest sha256:ec5157eeda5e2bb26ce169990410de0618bad01cc6bcd63f107b12b1b91f88b3                                         0.0s
+ => => exporting config sha256:00f5dde4617f88c31299678be8fce0c147dfb23f6a4ffce66ef0ef00600289ed                                           0.0s
+ => => exporting attestation manifest sha256:3f94abcc2a1f0226994514fd33e2db87fac5854cf80b91cc8be268416b36d7ba                             0.0s
+ => => exporting manifest list sha256:9ca9cffb8446a998df97610cc6ac73d1f2efcfa3b2632362e3794e502edb9205                                    0.0s
+ => => naming to docker.io/library/http-dns-trabalho02-redes2-dns:latest                                                                  0.0s
+ => => unpacking to docker.io/library/http-dns-trabalho02-redes2-dns:latest                                                               0.1s
+ => [server] exporting to image                                                                                                           0.5s
+ => => exporting layers                                                                                                                   0.1s
+ => => exporting manifest sha256:66e86224b330ed398379f16965397f96edf9bcb8d6e7911db2a9b2d0141f2ad8                                         0.0s
+ => => exporting config sha256:2bee49c75f52dcc85df4399cc95d7b415a1e9740d56390e890d13bf50f88581d                                           0.0s
+ => => exporting attestation manifest sha256:4733aec024f2253152a6f8fecdb2150580a32011e1ed16a2de897ce04fe72c57                             0.0s
+ => => exporting manifest list sha256:e363fc9af4313c31d4e443e774693cf253215a0ce0f85d5ab39e5e3d01d704ec                                    0.0s
+ => => naming to docker.io/library/http-dns-trabalho02-redes2-server:latest                                                               0.0s
+ => => unpacking to docker.io/library/http-dns-trabalho02-redes2-server:latest                                                            0.1s
+ => [client] exporting to image                                                                                                           0.5s
+ => => exporting layers                                                                                                                   0.1s
+ => => exporting manifest sha256:4ad3571fcef6fb09d8e023e439212fd7a45cf8d390ce13a8929fdfd169a39d36                                         0.0s
+ => => exporting config sha256:02cfc8812ca5a0728af6764ed729532936432508057cdc8e9e1483a47751bcf4                                           0.0s
+ => => exporting attestation manifest sha256:36ce3b4577794c64051dd08793969f059b9d7871e9e8e0cd01f5492b3d31b703                             0.0s
+ => => exporting manifest list sha256:5aab64ea1127a7b8d42a568f8052593cd618be046c2a0a4b2bacaa775df47bdc                                    0.0s
+ => => naming to docker.io/library/http-dns-trabalho02-redes2-client:latest                                                               0.0s
+ => => unpacking to docker.io/library/http-dns-trabalho02-redes2-client:latest                                                            0.1s
+ => [dns] resolving provenance for metadata file                                                                                          0.1s
+ => [client] resolving provenance for metadata file                                                                                       0.1s
+ => [server] resolving provenance for metadata file                                                                                       0.0s
+[+] build 3/3
+ ✔ Image http-dns-trabalho02-redes2-server Built                                                                                           2.3s
+ ✔ Image http-dns-trabalho02-redes2-client Built                                                                                           2.3s
+ ✔ Image http-dns-trabalho02-redes2-dns    Built                                                                                           2.3s
+[+] up 1/1
+ ✔ Container redes2-t02-dns Started                                                                                                       10.4s
+[+] up 2/2
+ ✔ Container redes2-t02-dns    Running                                                                                                     0.0s
+ ✔ Container redes2-t02-server Started                                                                                                    10.4s
+[+] up 3/3
+ ✔ Container redes2-t02-dns    Running                                                                                                     0.0s
+ ✔ Container redes2-t02-server Running                                                                                                     0.0s
+ ✔ Container redes2-t02-client Started                                                                                                    10.4s
+>>> Aplicando cenário A no cliente
+Cenário A: delay 10ms, 0% perda
+qdisc netem 8003: root refcnt 9 limit 1000 delay 10ms
+Gerado: /app/www/files/arquivo_100kb.bin (102400 bytes)
+Gerado: /app/www/files/arquivo_1mb.bin (1048576 bytes)
+Gerado: /app/www/files/arquivo_10mb.bin (10485760 bytes)
+=== Benchmark HTTP: 10 execuções por modo/arquivo/cenário A ===
+[TCP] index.html: 624 bytes | DNS=0.0205s | HTTP=0.0406s | Total=0.0615s | 0.08 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0225s | Total=0.0333s | 0.15 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0103s | HTTP=0.0226s | Total=0.0334s | 0.15 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0227s | Total=0.0334s | 0.15 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0223s | Total=0.0330s | 0.15 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0228s | Total=0.0336s | 0.15 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0229s | Total=0.0337s | 0.15 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0103s | HTTP=0.0226s | Total=0.0333s | 0.15 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0103s | HTTP=0.0225s | Total=0.0331s | 0.15 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0224s | Total=0.0332s | 0.15 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0104s | HTTP=0.0544s | Total=0.0652s | 12.57 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0105s | HTTP=0.0530s | Total=0.0639s | 12.82 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0103s | HTTP=0.0532s | Total=0.0641s | 12.78 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0104s | HTTP=0.0529s | Total=0.0638s | 12.83 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0104s | HTTP=0.0530s | Total=0.0639s | 12.81 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0103s | HTTP=0.0534s | Total=0.0643s | 12.75 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0104s | HTTP=0.0531s | Total=0.0640s | 12.81 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0105s | HTTP=0.0533s | Total=0.0642s | 12.77 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0104s | HTTP=0.0532s | Total=0.0642s | 12.76 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0105s | HTTP=0.0533s | Total=0.0643s | 12.74 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0103s | HTTP=0.1385s | Total=0.1502s | 55.86 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=0.1093s | Total=0.1208s | 69.47 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=0.1275s | Total=0.1404s | 59.73 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=0.1272s | Total=0.1393s | 60.20 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=0.1186s | Total=0.1309s | 64.08 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0103s | HTTP=0.1081s | Total=0.1200s | 69.92 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0103s | HTTP=0.1183s | Total=0.1302s | 64.41 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0103s | HTTP=0.1380s | Total=0.1499s | 55.96 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=0.1276s | Total=0.1395s | 60.11 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0103s | HTTP=0.1103s | Total=0.1223s | 68.58 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=0.7046s | Total=0.7328s | 114.48 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0104s | HTTP=0.7372s | Total=0.7563s | 110.91 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0104s | HTTP=0.6017s | Total=0.6208s | 135.13 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0105s | HTTP=0.5803s | Total=0.5994s | 139.96 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0105s | HTTP=0.6502s | Total=0.6699s | 125.23 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=0.6089s | Total=0.6277s | 133.64 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=0.7009s | Total=0.7199s | 116.53 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0104s | HTTP=0.6465s | Total=0.6656s | 126.03 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=0.6102s | Total=0.6297s | 133.22 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0104s | HTTP=0.6540s | Total=0.6734s | 124.58 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0105s | HTTP=0.0388s | Total=0.0496s | 0.10 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0324s | Total=0.0433s | 0.12 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0102s | HTTP=0.0324s | Total=0.0430s | 0.12 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0322s | Total=0.0429s | 0.12 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0322s | Total=0.0429s | 0.12 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0322s | Total=0.0430s | 0.12 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0324s | Total=0.0433s | 0.12 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0103s | HTTP=0.0322s | Total=0.0429s | 0.12 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0104s | HTTP=0.0322s | Total=0.0430s | 0.12 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0103s | HTTP=0.0320s | Total=0.0426s | 0.12 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0104s | HTTP=0.2961s | Total=0.3069s | 2.67 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0102s | HTTP=0.2971s | Total=0.3079s | 2.66 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0103s | HTTP=0.2957s | Total=0.3065s | 2.67 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0103s | HTTP=0.2965s | Total=0.3074s | 2.67 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0103s | HTTP=0.2976s | Total=0.3084s | 2.66 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0103s | HTTP=0.2992s | Total=0.3100s | 2.64 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0104s | HTTP=0.2926s | Total=0.3036s | 2.70 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0102s | HTTP=0.2921s | Total=0.3028s | 2.71 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0103s | HTTP=0.2930s | Total=0.3038s | 2.70 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=0.0103s | HTTP=0.2962s | Total=0.3070s | 2.67 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=2.7484s | Total=2.7598s | 3.04 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=2.7420s | Total=2.7535s | 3.05 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=2.7530s | Total=2.7647s | 3.03 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=2.7442s | Total=2.7558s | 3.04 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=2.7452s | Total=2.7567s | 3.04 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0103s | HTTP=2.7577s | Total=2.7692s | 3.03 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0105s | HTTP=2.7548s | Total=2.7664s | 3.03 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0103s | HTTP=2.7367s | Total=2.7482s | 3.05 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0104s | HTTP=2.7523s | Total=2.7638s | 3.04 Mbps
+[RUDP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0106s | HTTP=2.7551s | Total=2.7669s | 3.03 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=27.1035s | Total=27.1441s | 3.09 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0102s | HTTP=27.1682s | Total=27.2240s | 3.08 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0102s | HTTP=27.2018s | Total=27.2379s | 3.08 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=27.2253s | Total=27.2997s | 3.07 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0104s | HTTP=27.1939s | Total=27.2603s | 3.08 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=27.1584s | Total=27.2056s | 3.08 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=27.2206s | Total=27.2977s | 3.07 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0104s | HTTP=27.1695s | Total=27.2079s | 3.08 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=27.2365s | Total=27.3183s | 3.07 Mbps
+[RUDP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0103s | HTTP=27.2268s | Total=27.2928s | 3.07 Mbps
+Logs em logs/transfers.jsonl
+>>> Aplicando cenário B no cliente
+Cenário B: delay 50ms, 5% perda
+qdisc netem 8004: root refcnt 9 limit 1000 delay 50ms loss 5%
+Gerado: /app/www/files/arquivo_100kb.bin (102400 bytes)
+Gerado: /app/www/files/arquivo_1mb.bin (1048576 bytes)
+Gerado: /app/www/files/arquivo_10mb.bin (10485760 bytes)
+=== Benchmark HTTP: 10 execuções por modo/arquivo/cenário B ===
+[TCP] index.html: 624 bytes | DNS=0.0504s | HTTP=0.1032s | Total=0.1540s | 0.03 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0504s | HTTP=0.1040s | Total=0.1548s | 0.03 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0504s | HTTP=0.1038s | Total=0.1546s | 0.03 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1038s | Total=0.1547s | 0.03 Mbps
+[TCP] index.html: 624 bytes | DNS=1.0514s | HTTP=1.1359s | Total=2.1877s | 0.00 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0504s | HTTP=0.1038s | Total=0.1546s | 0.03 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1037s | Total=0.1547s | 0.03 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1039s | Total=0.1549s | 0.03 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1036s | Total=0.1545s | 0.03 Mbps
+[TCP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1037s | Total=0.1547s | 0.03 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0504s | HTTP=0.2543s | Total=0.3052s | 2.68 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0507s | HTTP=0.5086s | Total=0.5599s | 1.46 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0506s | HTTP=0.2545s | Total=0.3055s | 2.68 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0504s | HTTP=0.2543s | Total=0.3053s | 2.68 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0505s | HTTP=0.2542s | Total=0.3051s | 2.68 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0504s | HTTP=0.2546s | Total=0.3055s | 2.68 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0504s | HTTP=0.2542s | Total=0.3051s | 2.68 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0506s | HTTP=0.2544s | Total=0.3056s | 2.68 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0505s | HTTP=0.2544s | Total=0.3055s | 2.68 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.0505s | HTTP=0.2542s | Total=0.3052s | 2.68 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0504s | HTTP=0.5607s | Total=0.6127s | 13.69 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0505s | HTTP=1.0096s | Total=1.0617s | 7.90 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0505s | HTTP=0.8659s | Total=0.9190s | 9.13 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0505s | HTTP=0.5591s | Total=0.6115s | 13.72 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0504s | HTTP=0.9645s | Total=1.0167s | 8.25 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0505s | HTTP=0.5099s | Total=0.5621s | 14.92 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0506s | HTTP=0.5582s | Total=0.6106s | 13.74 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0505s | HTTP=0.7591s | Total=0.8115s | 10.34 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0504s | HTTP=0.5587s | Total=0.6110s | 13.73 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.0504s | HTTP=0.5092s | Total=0.5613s | 14.94 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0507s | HTTP=2.2173s | Total=2.2845s | 36.72 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0505s | HTTP=2.4148s | Total=2.4990s | 33.57 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0505s | HTTP=1.2643s | Total=1.3279s | 63.17 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=2.0521s | HTTP=1.2682s | Total=3.3346s | 25.16 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=1.0518s | HTTP=1.9181s | Total=2.9837s | 28.11 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0504s | HTTP=1.9599s | Total=2.0234s | 41.46 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0505s | HTTP=1.9988s | Total=2.0623s | 40.68 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0506s | HTTP=2.1619s | Total=2.2211s | 37.77 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0504s | HTTP=1.6697s | Total=1.7288s | 48.52 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.0505s | HTTP=1.5156s | Total=1.5749s | 53.26 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0506s | HTTP=0.6528s | Total=0.7038s | 0.01 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0504s | HTTP=0.1529s | Total=0.2038s | 0.02 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0506s | HTTP=0.1525s | Total=0.2035s | 0.02 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1521s | Total=0.2030s | 0.02 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1522s | Total=0.2030s | 0.02 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1522s | Total=0.2032s | 0.02 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.6528s | Total=0.7037s | 0.01 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0505s | HTTP=0.1525s | Total=0.2034s | 0.02 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.0503s | HTTP=0.1519s | Total=0.2026s | 0.02 Mbps
+[RUDP] index.html: 624 bytes | DNS=1.0512s | HTTP=0.1523s | Total=1.2039s | 0.00 Mbps
+[RUDP] arquivo_100kb.bin: 102400 bytes | DNS=1.0517s | HTTP=1.4200s | Total=2.4722s | 0.33 Mbps
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+Logs em logs/transfers.jsonl
+>>> Aplicando cenário C no cliente
+Cenário C: delay 100ms, 10% perda
+qdisc netem 8005: root refcnt 9 limit 1000 delay 100ms loss 10%
+Gerado: /app/www/files/arquivo_100kb.bin (102400 bytes)
+Gerado: /app/www/files/arquivo_1mb.bin (1048576 bytes)
+Gerado: /app/www/files/arquivo_10mb.bin (10485760 bytes)
+=== Benchmark HTTP: 10 execuções por modo/arquivo/cenário C ===
+[TCP] index.html: 624 bytes | DNS=2.1023s | HTTP=0.2037s | Total=2.3065s | 0.00 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1004s | HTTP=0.2037s | Total=0.3046s | 0.02 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1005s | HTTP=1.2585s | Total=1.3594s | 0.00 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1003s | HTTP=0.2039s | Total=0.3046s | 0.02 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1007s | HTTP=0.2037s | Total=0.3048s | 0.02 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1006s | HTTP=0.2037s | Total=0.3047s | 0.02 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1005s | HTTP=0.2040s | Total=0.3050s | 0.02 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1005s | HTTP=0.2039s | Total=0.3048s | 0.02 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1006s | HTTP=0.8149s | Total=0.9160s | 0.01 Mbps
+[TCP] index.html: 624 bytes | DNS=0.1006s | HTTP=0.2038s | Total=0.3049s | 0.02 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1006s | HTTP=0.5044s | Total=0.6055s | 1.35 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1006s | HTTP=0.5042s | Total=0.6054s | 1.35 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1004s | HTTP=0.5046s | Total=0.6055s | 1.35 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=2.1020s | HTTP=0.5042s | Total=2.6067s | 0.31 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1004s | HTTP=0.5046s | Total=0.6055s | 1.35 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1004s | HTTP=0.8052s | Total=0.9061s | 0.90 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1006s | HTTP=0.5043s | Total=0.6054s | 1.35 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1005s | HTTP=0.5047s | Total=0.6057s | 1.35 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1005s | HTTP=0.5043s | Total=0.6054s | 1.35 Mbps
+[TCP] arquivo_100kb.bin: 102400 bytes | DNS=0.1004s | HTTP=0.5046s | Total=0.6056s | 1.35 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=2.1029s | HTTP=2.0734s | Total=4.1780s | 2.01 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1005s | HTTP=1.0097s | Total=1.1120s | 7.54 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1004s | HTTP=2.1191s | Total=2.2226s | 3.77 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1005s | HTTP=1.1074s | Total=1.2096s | 6.93 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1005s | HTTP=1.4102s | Total=1.5125s | 5.55 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1004s | HTTP=1.1074s | Total=1.2097s | 6.93 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1005s | HTTP=1.2080s | Total=1.3103s | 6.40 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1003s | HTTP=1.1077s | Total=1.2098s | 6.93 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1003s | HTTP=1.1081s | Total=1.2105s | 6.93 Mbps
+[TCP] arquivo_1mb.bin: 1048576 bytes | DNS=0.1005s | HTTP=1.1098s | Total=1.2123s | 6.92 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1005s | HTTP=3.7530s | Total=3.8933s | 21.55 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1003s | HTTP=2.3089s | Total=2.4230s | 34.62 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1006s | HTTP=3.5646s | Total=3.6784s | 22.80 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1005s | HTTP=2.6696s | Total=2.7837s | 30.13 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1004s | HTTP=5.2077s | Total=5.3422s | 15.70 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1004s | HTTP=3.7973s | Total=3.9165s | 21.42 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1005s | HTTP=3.9422s | Total=4.0631s | 20.65 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1006s | HTTP=4.2150s | Total=4.3316s | 19.37 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1005s | HTTP=3.3349s | Total=3.4481s | 24.33 Mbps
+[TCP] arquivo_10mb.bin: 10485760 bytes | DNS=0.1005s | HTTP=2.6027s | Total=2.7368s | 30.65 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.1005s | HTTP=1.3030s | Total=1.4037s | 0.00 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.1006s | HTTP=0.3019s | Total=0.4030s | 0.01 Mbps
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] index.html: 624 bytes | DNS=0.1005s | HTTP=1.3023s | Total=1.4033s | 0.00 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.1004s | HTTP=0.3021s | Total=0.4029s | 0.01 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.1004s | HTTP=0.3024s | Total=0.4033s | 0.01 Mbps
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] index.html: 624 bytes | DNS=0.1004s | HTTP=0.3025s | Total=0.4034s | 0.01 Mbps
+[RUDP] index.html: 624 bytes | DNS=0.1004s | HTTP=1.3032s | Total=1.4041s | 0.00 Mbps
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+[RUDP] ERRO: Sem ACK esperado=1
+[RUDP] ERRO: timed out
+Logs em logs/transfers.jsonl
+Regras tc removidas em eth0
+qdisc noqueue 0: root refcnt 2 
+cenario modo           arquivo  vazao_min_mbps  vazao_media_mbps  vazao_max_mbps  desvio_padrao_mbps  dns_media_s  http_media_s  total_media_s  taxa_erro  retransmissoes_media  amostras
+      A rudp arquivo_100kb.bin        2.642680          2.673623        2.705432            0.020315     0.010308      0.295607       0.306417        0.0              0.000000        10
+      A rudp  arquivo_10mb.bin        3.070688          3.078531        3.090396            0.006207     0.010297     27.190454      27.248834        0.0              0.000000        10
+      A rudp   arquivo_1mb.bin        3.029218          3.038816        3.052411            0.007515     0.010401      2.748928       2.760501        0.0              0.000000        10
+      A rudp        index.html        0.100609          0.114546        0.117114            0.004925     0.010366      0.032895       0.043662        0.0              0.000000        10
+      A  tcp arquivo_100kb.bin       12.568189         12.764514       12.830811            0.075599     0.010392      0.053280       0.064180        0.0              0.000000        10
+      A  tcp  arquivo_10mb.bin      110.912114        125.970897      139.957182            9.668934     0.010356      0.649455       0.669530        0.0              0.000000        10
+      A  tcp   arquivo_1mb.bin       55.861262         62.833041       69.923477            5.282699     0.010334      0.122327       0.134358        0.0              0.000000        10
+      A  tcp        index.html        0.081110          0.142877        0.151059            0.021720     0.011363      0.024392       0.036160        0.0              0.000000        10
+      B rudp arquivo_100kb.bin        0.331361          0.331361        0.331361                 NaN     1.051688      1.420009       2.472230        0.0              0.000000         1
+      B rudp        index.html        0.004147          0.019029        0.024636            0.008950     0.150537      0.252421       0.403385        0.0              0.200000        10
+      B  tcp arquivo_100kb.bin        1.463077          2.560943        2.684747            0.385754     0.050495      0.279785       0.330796        0.0              0.000000        10
+      B  tcp  arquivo_10mb.bin       25.156187         40.842000       63.171459           11.545650     0.350781      1.838863       2.204018        0.0              0.000000        10
+      B  tcp   arquivo_1mb.bin        7.901031         12.036211       14.944785            2.806792     0.050467      0.685487       0.737813        0.0              0.000000        10
+      B  tcp        index.html        0.002282          0.029286        0.032414            0.009488     0.150534      0.206951       0.357920        0.0              0.000000        10
+      C rudp        index.html        0.003555          0.008600        0.012390            0.004718     0.100472      0.731056       0.831942        0.0              0.428571         7
+      C  tcp arquivo_100kb.bin        0.314263          1.204178        1.353256            0.343022     0.300635      0.534499       0.835683        0.0              0.000000        10
+      C  tcp  arquivo_10mb.bin       15.702442         24.121973       34.621254            5.872113     0.100475      3.539610       3.661672        0.0              0.000000        10
+      C  tcp   arquivo_1mb.bin        2.007820          5.992659        7.543968            1.762948     0.300681      1.336075       1.638733        0.0              0.000000        10
+      C  tcp        index.html        0.002164          0.012594        0.016390            0.006144     0.300707      0.370370       0.671526        0.0              0.000000        10
+
+Gráficos e CSV em /app/analysis/output
+Gráficos e CSV em analysis/output/
+Testes Docker concluídos. Logs em logs/transfers.jsonl
+brenda@brenda-Inspiron-15-3511:~/Área de trabalho/trabalho-02-redes2/http-dns-trabalho02-redes2$ ./scripts/capture_traffic.sh any cenario_A
+Capturando em any -> /home/brenda/Área de trabalho/trabalho-02-redes2/http-dns-trabalho02-redes2/captures/cenario_A_20260622_221203.pcap
+Filtro: udp port 53 or tcp port 8080 or udp port 8081
+Pressione Ctrl+C para parar.
+[sudo] senha para brenda: 
+tcpdump: data link type LINUX_SLL2
+tcpdump: listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes
+^C62 packets captured
+96 packets received by filter
+0 packets dropped by kernel
+brenda@brenda-Inspiron-15-3511:~/Área de trabalho/trabalho-02-redes2/http-dns-trabalho02-redes2$ ./scripts/capture_traffic.sh any cenario_B
+Capturando em any -> /home/brenda/Área de trabalho/trabalho-02-redes2/http-dns-trabalho02-redes2/captures/cenario_B_20260622_221237.pcap
+Filtro: udp port 53 or tcp port 8080 or udp port 8081
+Pressione Ctrl+C para parar.
+tcpdump: data link type LINUX_SLL2
+tcpdump: listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes
+^C10 packets captured
+14 packets received by filter
+0 packets dropped by kernel
+brenda@brenda-Inspiron-15-3511:~/Área de trabalho/trabalho-02-redes2/http-dns-trabalho02-redes2$ ./scripts/capture_traffic.sh any cenario_C
+Capturando em any -> /home/brenda/Área de trabalho/trabalho-02-redes2/http-dns-trabalho02-redes2/captures/cenario_C_20260622_221244.pcap
+Filtro: udp port 53 or tcp port 8080 or udp port 8081
+Pressione Ctrl+C para parar.
+tcpdump: data link type LINUX_SLL2
+tcpdump: listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes
+^C30 packets captured
+52 packets received by filter
+0 packets dropped by kernel
+brenda@brenda-Inspiron-15-3511:~/Área de trabalho/trabalho-02-redes2/http-dns-trabalho02-redes2$ 

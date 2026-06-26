@@ -23,14 +23,6 @@ Servidor Web (172.29.0.10) ── www/ ──► index.html, arquivos estáticos
 | HTTP/R-UDP | `src/http_rudp_server.py` | HTTP sobre camada R-UDP Stop-and-Wait |
 | Cliente | `src/web_client.py` | DNS + GET via `--mode tcp\|rudp` |
 
-## Configuração
-
-Copie `.env.example` para `.env` e ajuste matrícula/nome:
-
-```bash
-cp .env.example .env
-```
-
 ## Uso local (sem Docker)
 
 Terminal 1 — DNS:
@@ -74,18 +66,3 @@ Exportar pcap para CSV:
 ```bash
 python3 analysis/pcap_to_csv.py captures/cenario_A_*.pcap
 ```
-
-## Gráficos
-
-Após o benchmark, os gráficos são gerados em `analysis/output/`:
-- Throughput por arquivo e cenário (TCP vs R-UDP)
-- Tempo DNS vs HTTP
-- Taxa de erro
-- Boxplot de duração total
-
-## Entrega
-
-- Código: esta pasta
-- `.pcap`: `captures/`
-- Relatório SBC: incluir respostas às 3 perguntas obrigatórias
-- Vídeo: demonstração com perda de pacotes ativa (cenário B ou C)

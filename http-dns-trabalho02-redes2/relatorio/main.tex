@@ -1,0 +1,540 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{float}
+
+\title{Miniservidor HTTP/1.1 com Resolução DNS Local sobre TCP e R-UDP}
+
+\author{Brenda Evilly Oliveira de Moura}
+
+\address{%
+  Universidade Federal do Piauí (UFPI)\\
+  Campus Senador Helvídio Nunes de Barros (CSHNB)\\
+  Bacharelado em Sistemas de Informação\\
+  Picos -- PI -- Brasil\\
+  \email{brenda.moura@ufpi.edu.br}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  Este relatório descreve a evolução de um sistema de transferência de arquivos
+  para um miniservidor web capaz de atender requisições HTTP/1.1 sobre TCP nativo
+  e sobre uma camada R-UDP desenvolvida previamente. O cliente web passou a
+  depender de um módulo DNS simplificado em UDP antes de qualquer conexão ao
+  servidor. Foram conduzidos experimentos em ambiente Docker com três cenários
+  de rede simulados por \emph{tc netem}, comparando vazão, tempo de resposta e
+  taxa de erro entre os modos de transporte. Os resultados indicam desempenho
+  superior e maior estabilidade do TCP, enquanto o R-UDP apresentou limitações
+  marcantes sob perda de pacotes, especialmente em arquivos maiores que 100~kB.
+\end{abstract}
+
+\section{Introdução}
+
+A World Wide Web consolidou o HTTP como protocolo de aplicação dominante para
+distribuição de documentos hipertexto e recursos estáticos \cite{rfc2616,rfc9110}.
+Antes de qualquer requisição HTTP, o cliente precisa resolver um nome simbólico
+para um endereço IP, função tradicionalmente desempenhada pelo DNS sobre UDP
+\cite{rfc1035}. Na pilha TCP/IP, o UDP oferece entrega sem confirmação
+\cite{rfc768}, enquanto o TCP garante confiabilidade, controle de fluxo e
+ordenação \cite{rfc793,tanenbaum2011}.
+
+Na disciplina de Redes de Computadores II, o trabalho anterior implementou
+transferência de arquivos por meio de um protocolo textual customizado, com
+alternância entre TCP e R-UDP (Stop-and-Wait) em contêineres Docker. A presente
+avaliação estende essa base para simular navegação web: o cliente consulta um
+servidor DNS local, obtém o IP do \emph{host} web e então realiza requisições
+GET HTTP/1.1, servindo páginas HTML e arquivos binários de tamanhos distintos.
+
+O objetivo deste documento é registrar a arquitetura implementada, a metodologia
+de testes com emulação de atraso e perda, os resultados quantitativos obtidos
+em 240 execuções planejadas e a validação do fluxo DNS $\rightarrow$ HTTP por
+meio de capturas Wireshark. As análises buscam responder como a perda simulada
+afeta o DNS e o download HTTP, qual o impacto dos cabeçalhos HTTP frente ao
+protocolo textual anterior e se a sequência observada na rede corresponde à
+ordem esperada da arquitetura em camadas \cite{kurose2017,carpenter2010}.
+
+\section{Fundamentação Teórica}
+
+O HTTP/1.1 define mensagens de requisição e resposta compostas por linha inicial,
+cabeçalhos e corpo opcional \cite{rfc2616}. Campos como \texttt{Host},
+\texttt{Content-Type} e \texttt{Content-Length} permitem identificar o recurso,
+declarar o tipo de mídia e informar o tamanho do payload. No contexto acadêmico
+deste projeto, incluiu-se ainda o cabeçalho personalizado \texttt{X-Custom-Auth},
+calculado como hash SHA-256 da matrícula concatenada ao nome do estudante.
+
+O DNS padrão utiliza consultas e respostas UDP na porta 53, com registros do
+tipo A mapeando nomes para endereços IPv4 \cite{rfc1035}. Por operar sem
+retransmissão nativa, consultas perdidas dependem de temporizadores e novas
+tentativas na camada de aplicação \cite{kurose2017,tanenbaum2011}. O TCP, por
+sua vez, realiza \emph{handshake}, transferência orientada a fluxo de bytes e
+encerramento ordenado \cite{rfc793}.
+
+A camada R-UDP reutilizada neste trabalho implementa confiabilidade Stop-and-Wait
+sobre UDP, com cabeçalho binário contendo autenticação, \emph{checksum} e
+números de sequência. Cada segmento de dados aguarda confirmação antes do envio
+do próximo, o que simplifica a implementação, mas limita a vazão quando o RTT
+aumenta ou quando há perda \cite{tanenbaum2011}. A emulação de canal foi feita
+com \texttt{tc netem}, ferramenta consolidada para introduzir atraso e perda em
+laboratório \cite{netem2005}.
+
+\section{Metodologia}
+
+Esta seção descreve a arquitetura experimental, os protocolos de aplicação
+(DNS, HTTP e R-UDP), os cenários de rede simulados e o procedimento adotado
+para coleta, análise e validação cruzada dos dados.
+
+\subsection{Arquitetura experimental}
+
+O ambiente de testes foi conteinerizado com Docker Compose \cite{docker2024},
+utilizando três serviços baseados em Ubuntu 22.04 conectados à rede bridge
+\texttt{172.29.0.0/24}. O contêiner DNS (\texttt{redes2-t02-dns}) ocupa o
+endereço \texttt{172.29.0.5} e escuta consultas UDP na porta 53. O contêiner
+servidor web (\texttt{redes2-t02-server}) responde em \texttt{172.29.0.10},
+expondo HTTP/TCP na porta 8080 e HTTP/R-UDP na porta 8081. O contêiner cliente
+(\texttt{redes2-t02-client}), em \texttt{172.29.0.20}, inicia com a
+\emph{capability} \texttt{NET\_ADMIN} para aplicar regras \texttt{tc} em sua
+própria interface \texttt{eth0}.
+
+A aplicação foi desenvolvida em Python 3, sem bibliotecas de manipulação de
+pacotes de alto nível. O cliente web \textbf{não} recebe o IP do servidor como
+parâmetro obrigatório de conexão: ele resolve \texttt{www.redes.local} junto
+ao DNS e só então abre a sessão HTTP no endereço retornado. Os arquivos servidos
+incluem \texttt{index.html} (624~bytes), \texttt{arquivo\_100kb.bin},
+\texttt{arquivo\_1mb.bin} e \texttt{arquivo\_10mb.bin}, gerados pelo script
+\texttt{generate\_www\_files.py} antes de cada sessão de testes.
+
+As métricas de cada transferência (tempo de DNS, tempo HTTP, duração total,
+bytes recebidos, vazão, retransmissões R-UDP e indicador de sucesso) foram
+registradas pela classe \texttt{WebTransferMetrics} no arquivo
+\texttt{logs/transfers.jsonl}, no formato JSON Lines. A degradação de rede é
+introduzida no \emph{egress} do cliente: todo tráfego DNS e HTTP atravessa o
+\texttt{netem} configurado em \texttt{eth0} antes de alcançar os demais nós.
+
+\subsection{Protocolo DNS simplificado}
+
+O módulo DNS implementado neste trabalho não segue integralmente o RFC~1035, mas
+reproduz consultas tipo A em formato compacto. A consulta UDP contém: ID
+(2~bytes), tamanho do nome (2~bytes) e nome em UTF-8. A resposta repete ID e
+nome e acrescenta quatro octetos IPv4; o endereço \texttt{0.0.0.0} indica falha
+de resolução. A zona é lida do arquivo \texttt{dns/hosts.txt}, mapeando
+\texttt{www.redes.local} para \texttt{172.29.0.10}.
+
+O cliente DNS utiliza \texttt{DNS\_TIMEOUT} de 1,0~s e até três retransmissões
+na camada de aplicação. O temporizador efetivo varia conforme o cenário: 0,5~s
+(A), 1,0~s (B) e 2,0~s (C). O tempo de resolução é medido com
+\texttt{time.perf\_counter()} entre o primeiro envio e a recepção da resposta
+válida.
+
+\subsection{Protocolo HTTP/1.1}
+
+Após a resolução DNS, o cliente monta uma requisição textual HTTP/1.1, por
+exemplo \texttt{GET /index.html HTTP/1.1}, seguida de \texttt{Host},
+\texttt{X-Custom-Auth} e linha em branco. O servidor valida o hash de
+autenticação, localiza o recurso em \texttt{www/} e responde com
+\texttt{HTTP/1.1 200 OK} ou \texttt{404 Not Found}, incluindo
+\texttt{Content-Type}, \texttt{Content-Length} e novamente
+\texttt{X-Custom-Auth}.
+
+No modo TCP, a requisição é enviada após \texttt{connect()} à porta 8080 do IP
+resolvido; a resposta é lida até o encerramento da conexão. No modo R-UDP, a
+mensagem HTTP completa (requisição e resposta) trafega como \emph{payload} dos
+pacotes Stop-and-Wait na porta 8081, preservando os mesmos cabeçalhos de
+aplicação.
+
+\subsection{Protocolo R-UDP sobre HTTP}
+
+O R-UDP reutiliza o cabeçalho binário de 52~bytes fixos do trabalho anterior
+(\emph{magic}, versão, tipo, \emph{seq}, \emph{ack}, \emph{payload\_len},
+autenticação de 32~bytes e \emph{checksum} CRC32), seguido de \emph{payload} de
+até 4096~bytes. Os tipos de mensagem permanecem SYN, DATA, ACK e FIN. A
+requisição HTTP é fragmentada em um ou mais pacotes SYN/DATA; a resposta HTTP
+retorna pelo mesmo mecanismo. O \emph{timeout} R-UDP base é ajustado por cenário
+(0,2~s, 0,5~s ou 1,0~s), coerente com o RTT emulado.
+
+\subsection{Cenários de rede simulados}
+
+A degradação foi aplicada com \texttt{tc qdisc} do pacote \texttt{iproute2},
+executado no contêiner cliente pelo script \texttt{setup\_tc.sh}. Antes de cada
+cenário, qualquer disciplina existente é removida; em seguida aplica-se o perfil
+\texttt{netem} correspondente. A Tabela~\ref{tab:cenarios} resume os três
+cenários avaliados.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Cenários de rede e comandos de simulação}
+  \label{tab:cenarios}
+  \begin{tabular}{cccc}
+    \toprule
+    Cenário & Perda & Atraso & Comando \\
+    \midrule
+    A & 0\%  & 10~ms  & \texttt{setup\_tc.sh A eth0} \\
+    B & 5\%  & 50~ms  & \texttt{setup\_tc.sh B eth0} \\
+    C & 10\% & 100~ms & \texttt{setup\_tc.sh C eth0} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Procedimento de testes}
+
+O procedimento seguido em cada sessão obedeceu à sequência abaixo:
+
+\begin{enumerate}
+  \item Construção das imagens e inicialização dos contêineres com
+        \texttt{docker compose up -d}, aguardando DNS, servidor e cliente.
+  \item Geração dos arquivos em \texttt{www/files/} e limpeza de
+        \texttt{logs/transfers.jsonl} para evitar mistura entre execuções.
+  \item Para cada cenário A, B e C: aplicação do perfil \texttt{netem} no cliente;
+        execução de dez repetições por combinação de modo (\texttt{tcp} ou
+        \texttt{rudp}) e recurso (\texttt{/index.html},
+        \texttt{/files/arquivo\_100kb.bin}, \texttt{/files/arquivo\_1mb.bin},
+        \texttt{/files/arquivo\_10mb.bin}) via \texttt{run\_benchmark.sh}.
+  \item Remoção das regras \texttt{tc} ao final dos três cenários.
+  \item Geração dos gráficos estatísticos com \texttt{analysis/analyze.py}
+        (Pandas e Matplotlib) e da taxa de erro com
+        \texttt{analysis/gerar\_taxa\_erro.py} a partir do log do terminal.
+  \item Capturas dedicadas com \texttt{tcpdump -i eth0} dentro do contêiner
+        cliente, filtrando tráfego para \texttt{172.29.0.5} e
+        \texttt{172.29.0.10}, durante execuções manuais representativas.
+\end{enumerate}
+
+No total, planejaram-se 240 transferências (3 cenários $\times$ 2 modos
+$\times$ 4 arquivos $\times$ 10 repetições). Cada invocação de
+\texttt{web\_client.py} registra separadamente \texttt{dns\_duration\_s},
+\texttt{http\_duration\_s} e \texttt{total\_duration\_s}, permitindo isolar o
+impacto da resolução de nomes do tempo de download HTTP.
+
+\subsection{Validação cruzada}
+
+A validação cruzada confronta métricas da aplicação Python com observações
+diretas nas capturas Wireshark/\texttt{tshark}. A Tabela~\ref{tab:validacao}
+resume a correspondência; os fluxos foram filtrados por
+\texttt{ip.addr==172.29.0.20}, \texttt{udp.port==53}, \texttt{tcp.port==8080} e
+\texttt{udp.port==8081}. As capturas dedicadas referem-se a execuções
+representativas, distintas das 240 rodadas estatísticas do \emph{benchmark}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Correspondência entre métricas da aplicação e medições de rede}
+  \label{tab:validacao}
+  \small
+  \begin{tabularx}{\linewidth}{|p{3.2cm}|X|}
+    \hline
+    \textbf{Métrica (Python)} & \textbf{Medição no Wireshark/tshark} \\
+    \hline
+    \texttt{dns\_duration\_s} &
+    Intervalo entre primeiro UDP:53 cliente$\rightarrow$DNS e resposta
+    DNS$\rightarrow$cliente (\emph{frame.time\_relative}). \\
+    \hline
+    \texttt{http\_duration\_s} &
+    TCP: SYN até último segmento da resposta HTTP.
+    R-UDP: primeiro pacote UDP:8081 até FIN da sessão. \\
+    \hline
+    \texttt{bytes\_received} &
+    Tamanho do corpo HTTP (\texttt{Content-Length}) ou soma dos
+    \emph{payloads} DATA R-UDP após remoção dos cabeçalhos HTTP. \\
+    \hline
+    \texttt{retransmissions} &
+    Contador interno do cliente R-UDP; no Wireshark, pacotes DATA repetidos
+    com mesmo \emph{seq} ou SYN reenviado antes do ACK. \\
+    \hline
+    Ordem DNS $\rightarrow$ HTTP &
+    Sequência UDP:53 completa antes do SYN TCP:8080 ou do primeiro UDP:8081. \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{Resultados Experimentais}
+
+\subsection{Desempenho no cenário A}
+
+Na ausência de perda, o TCP manteve 100\% de sucesso em todas as combinações.
+Para o arquivo de 10~MB, a vazão média alcançou 126,0~Mbps (desvio de 9,7~Mbps),
+enquanto o R-UDP estabilizou-se em torno de 3,1~Mbps. A diferença decorre do
+Stop-and-Wait: cada \emph{chunk} de aproximadamente 4~kB aguarda ACK antes do
+próximo envio, enquanto o TCP aproveita janela deslizante do \emph{kernel}.
+
+O tempo médio de DNS ficou em 10~ms para ambos os modos, representando cerca de
+14\% do tempo total no TCP para arquivos pequenos e menos de 2\% no arquivo de
+10~MB. A Tabela~\ref{tab:vazao-a} resume os principais valores do cenário A.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Vazão média (Mbps) no cenário A}
+  \label{tab:vazao-a}
+  \begin{tabular}{lrr}
+    \toprule
+    Arquivo & TCP & R-UDP \\
+    \midrule
+    \texttt{index.html} (624~B) & 0,14 & 0,11 \\
+    100~kB & 12,8 & 2,7 \\
+    1~MB & 62,8 & 3,0 \\
+    10~MB & 126,0 & 3,1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+A Figura~\ref{fig:throughput-10mb} ilustra a diferença de vazão entre TCP e
+R-UDP para o arquivo de 10~MB nos três cenários simulados.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{throughput_arquivo_10mb_bin.png}
+  \caption{Throughput médio para \texttt{arquivo\_10mb.bin} (10~MB)}
+  \label{fig:throughput-10mb}
+\end{figure}
+
+O mesmo padrão aparece no arquivo de 1~MB (Figura~\ref{fig:throughput-1mb}),
+com queda acentuada do R-UDP nos cenários B e C.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{throughput_arquivo_1mb_bin.png}
+  \caption{Throughput médio para \texttt{arquivo\_1mb.bin}}
+  \label{fig:throughput-1mb}
+\end{figure}
+
+Para o arquivo de 100~kB, a Figura~\ref{fig:throughput-100kb} mostra vazão TCP
+próxima de 13~Mbps no cenário A e degradação progressiva com a perda simulada.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{throughput_arquivo_100kb_bin.png}
+  \caption{Throughput médio para \texttt{arquivo\_100kb.bin}}
+  \label{fig:throughput-100kb}
+\end{figure}
+
+A Figura~\ref{fig:throughput-index} apresenta o comportamento para
+\texttt{index.html}, em que o tempo fixo de DNS e cabeçalhos HTTP domina o
+cálculo de vazão aparente.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{throughput_index_html.png}
+  \caption{Throughput médio para \texttt{index.html} (624~bytes)}
+  \label{fig:throughput-index}
+\end{figure}
+
+\subsection{Impacto da perda nos cenários B e C}
+
+O TCP manteve taxa de erro nula nos cenários B e C, embora a vazão do arquivo de
+10~MB caísse de 126~Mbps (A) para 41~Mbps (B) e 24~Mbps (C). Já o R-UDP
+apresentou falhas expressivas a partir do cenário B para arquivos maiores que
+\texttt{index.html}: 90\% de erro no arquivo de 100~kB, 100\% em 1~MB e 10~MB.
+No cenário C, mesmo \texttt{index.html} registrou 30\% de falha (7 sucessos em
+10 tentativas). A Tabela~\ref{tab:erro} consolida a taxa de erro inferida do
+log de execução do \emph{benchmark}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Taxa de erro (\%) por cenário, modo e arquivo}
+  \label{tab:erro}
+  \small
+  \begin{tabular}{clcc}
+    \toprule
+    Cen. & Arquivo & TCP & R-UDP \\
+    \midrule
+    \multirow{4}{*}{B}
+      & \texttt{index.html} & 0 & 0 \\
+      & 100~kB & 0 & 90 \\
+      & 1~MB & 0 & 100 \\
+      & 10~MB & 0 & 100 \\
+    \midrule
+    \multirow{4}{*}{C}
+      & \texttt{index.html} & 0 & 30 \\
+      & 100~kB & 0 & 100 \\
+      & 1~MB & 0 & 100 \\
+      & 10~MB & 0 & 100 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+A Figura~\ref{fig:taxa-erro} apresenta visualmente a taxa de falha para todas
+as combinações testadas, incluindo barras de 100\% para R-UDP em arquivos
+grandes nos cenários degradados.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{taxa_erro.png}
+  \caption{Taxa de erro por cenário, modo de transporte e tamanho de arquivo}
+  \label{fig:taxa-erro}
+\end{figure}
+
+Consultas DNS com retransmissão apareceram nos logs com duração próxima de
+1,05~s (cenário B) e 2,10~s (cenário C). A Figura~\ref{fig:dns-http} contrasta
+o tempo médio de DNS e de HTTP por cenário e modo de transporte.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{dns_vs_http_tempo.png}
+  \caption{Tempo médio de DNS e de HTTP por cenário e modo}
+  \label{fig:dns-http}
+\end{figure}
+
+Esses picos concentraram-se em menos de 10\% das execuções TCP, mas tornaram o
+DNS proporcionalmente mais relevante em páginas pequenas. A
+Figura~\ref{fig:duracao-box} exibe a dispersão do tempo total de carregamento
+(DNS + HTTP) em cada combinação.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{duracao_total_boxplot.png}
+  \caption{Distribuição do tempo total de carregamento (DNS + HTTP)}
+  \label{fig:duracao-box}
+\end{figure}
+
+\subsection{Validação Wireshark}
+
+A Figura~\ref{fig:fluxo-geral} exibe a listagem filtrada por
+\texttt{ip.addr==172.29.0.20}, evidenciando consulta UDP ao DNS seguida de
+\emph{handshake} TCP e requisição GET.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{"ip.addr==172.29.0.20.png"}
+  \caption{Fluxo completo DNS $\rightarrow$ HTTP/TCP filtrado pelo cliente}
+  \label{fig:fluxo-geral}
+\end{figure}
+
+A Figura~\ref{fig:transicao-dns-tcp} amplia os \emph{frames} 1 a 6: a resposta
+DNS encerra em 0,001~s e o SYN TCP parte em 0,013~s, intervalo de
+aproximadamente 12~ms.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{"frame.number >= 1 && frame.number <= 6.png"}
+  \caption{Transição entre resposta DNS e início do \emph{handshake} TCP}
+  \label{fig:transicao-dns-tcp}
+\end{figure}
+
+A Figura~\ref{fig:get} detalha os cabeçalhos da requisição GET, incluindo
+\texttt{Host} e \texttt{X-Custom-Auth}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.88\textwidth]{1.1.png}
+  \caption{Detalhamento da requisição HTTP GET}
+  \label{fig:get}
+\end{figure}
+
+A Figura~\ref{fig:200ok} apresenta a resposta \texttt{HTTP/1.1 200 OK} com
+\texttt{Content-Type}, \texttt{Content-Length} e \texttt{X-Custom-Auth}.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.88\textwidth]{"200 OK.png"}
+  \caption{Resposta HTTP/1.1 200 OK com cabeçalhos exigidos}
+  \label{fig:200ok}
+\end{figure}
+
+A Figura~\ref{fig:dns-rudp} mostra a sequência DNS seguida de tráfego UDP na
+porta 8081, sem \emph{handshake} TCP.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{"udp.port == 53 || udp.port == 8081.png"}
+  \caption{Consulta DNS e início da sessão R-UDP (porta 8081)}
+  \label{fig:dns-rudp}
+\end{figure}
+
+O diagrama de fluxo da Figura~\ref{fig:flow} resume visualmente a ordem das
+interações entre cliente, DNS e servidor web.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{flow.png}
+  \caption{Diagrama de fluxo gerado pelo Wireshark (\emph{Flow Graph})}
+  \label{fig:flow}
+\end{figure}
+
+No cenário B com R-UDP, a Figura~\ref{fig:rudp-b} registra múltiplos pacotes
+UDP:8081 em sequência Stop-and-Wait, compatível com retransmissões observadas
+durante o \emph{benchmark}. O Wireshark rotula as consultas DNS simplificadas
+como \emph{Malformed Packet}, pois o formato adotado difere do RFC~1035; a
+ordem temporal, contudo, confirma o comportamento esperado do sistema.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.92\textwidth]{"cenario_B_rudp.pcap-Filtro: udp.port==8081.png"}
+  \caption{Tráfego R-UDP no cenário B com 5\% de perda}
+  \label{fig:rudp-b}
+\end{figure}
+
+\section{Discussão das Perguntas Obrigatórias}
+
+\subsection{Perda simulada, DNS e download HTTP}
+
+A perda introduzida pelo \texttt{netem} afetou o DNS de forma pontual, mas
+mensurável. Como o UDP não retransmite automaticamente, o cliente DNS recorreu
+ao temporizador de aplicação: consultas bem-sucedidas mantiveram cerca de 50~ms
+(B) e 100~ms (C), alinhadas ao atraso configurado, enquanto falhas isoladas
+elevaram o tempo para 1~s ou 2~s conforme o número de \emph{retries}. O impacto
+relativo foi maior em objetos pequenos, nos quais o DNS pode representar até 18\%
+do tempo total TCP, conforme a Figura~\ref{fig:dns-http}.
+
+No download HTTP via TCP, a pilha do \emph{kernel} absorveu perdas e
+retransmissões de forma transparente, preservando 100\% de sucesso. Já o HTTP
+sobre R-UDP degradou drasticamente: a partir de 5\% de perda, transferências
+acima de 100~kB praticamente não completaram dentro do limite de tentativas, o
+que se reflete na Figura~\ref{fig:taxa-erro}. Confirmou-se, portanto, que o
+DNS exige \emph{timeout} explícito na aplicação, enquanto HTTP/TCP delega
+confiabilidade ao transporte nativo.
+
+\subsection{Overhead dos cabeçalhos HTTP}
+
+Comparando com o protocolo textual customizado do trabalho anterior, a camada
+HTTP adiciona linha de requisição, múltiplos cabeçalhos e separador
+\texttt{\textbackslash r\textbackslash n\textbackslash r\textbackslash n}. Para
+\texttt{index.html} (624~bytes), o tempo total TCP no cenário A foi 36~ms, dos
+quais cerca de 31~ms correspondem a DNS e negociação HTTP, ou seja, 86\% do
+tempo gasto em \emph{overhead} fixo. Para o arquivo de 10~MB (669~ms total),
+esse \emph{overhead} cai para aproximadamente 5\%.
+
+A Figura~\ref{fig:throughput-index} mostra vazões abaixo de 0,2~Mbps para a
+página HTML, enquanto a Figura~\ref{fig:throughput-10mb} evidencia dezenas a
+centenas de Mbps no TCP para o arquivo grande. Essa diferença visual confirma
+que o custo dos cabeçalhos HTTP concentra-se nas transferências de poucos bytes
+e torna-se marginal quando o payload cresce.
+
+\subsection{Ordem do fluxo na arquitetura em camadas}
+
+As capturas confirmam a sequência prevista pela arquitetura da Internet: camada
+de aplicação DNS (UDP/53) precedendo a sessão HTTP. Nos \emph{frames} analisados,
+observou-se consulta DNS (\texttt{172.29.0.20} $\rightarrow$ \texttt{172.29.0.5}),
+resposta imediata, SYN TCP para \texttt{172.29.0.10:8080}, \emph{handshake}
+completo, GET \texttt{/index.html}, resposta \texttt{200 OK} e encerramento FIN,
+conforme Figuras~\ref{fig:fluxo-geral} e~\ref{fig:transicao-dns-tcp}.
+
+No modo R-UDP, após a mesma resolução DNS, o primeiro pacote de dados aparece
+em UDP/8081, sem \emph{handshake} TCP, como ilustram as
+Figuras~\ref{fig:dns-rudp},~\ref{fig:flow} e~\ref{fig:rudp-b}.
+
+\section{Conclusão}
+
+Este trabalho integrou resolução DNS local, miniservidor HTTP/1.1 e transporte
+alternável entre TCP e R-UDP em ambiente Docker instrumentado. Os experimentos
+repetidos em três cenários de rede quantificaram diferenças substanciais: o TCP
+nativo manteve confiabilidade total e vazões superiores, enquanto o R-UDP
+Stop-and-Wait mostrou-se adequado apenas no cenário A sem perda, falhando de
+forma massiva quando a taxa de perda atingiu 5\% ou 10\% em arquivos maiores.
+
+As capturas Wireshark corroboraram a ordem DNS $\rightarrow$ HTTP e permitiram
+inspecionar cabeçalhos exigidos pelo enunciado. Como continuidade, sugere-se
+incorporar registro sistemático de falhas no arquivo JSONL, ampliar \emph{timeouts}
+R-UDP em cenários degradados ou adotar janela deslizante para reduzir sensibilidade
+à perda. O repositório contém código, \emph{scripts} de \emph{benchmark}, gráficos
+e arquivos \texttt{.pcap} utilizados nesta análise.
+
+\bibliographystyle{sbc}
+\bibliography{sbc-template}
+
+\end{document}

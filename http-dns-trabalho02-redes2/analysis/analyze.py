@@ -32,7 +32,7 @@ def load_dataframe() -> pd.DataFrame:
     return df
 
 
-def summary_table(df: pd.DataFrame) -> pd.DataFrame:
+def summary_table(df: pd.DataFrame, expected_runs: int = 10) -> pd.DataFrame:
     agg = (
         df.groupby(["scenario", "mode", "file_name"])
         .agg(
@@ -43,12 +43,15 @@ def summary_table(df: pd.DataFrame) -> pd.DataFrame:
             dns_media_s=("dns_duration_s", "mean"),
             http_media_s=("http_duration_s", "mean"),
             total_media_s=("total_duration_s", "mean"),
-            taxa_erro=("success", lambda s: 1 - s.mean()),
             retransmissoes_media=("retransmissions", "mean"),
             amostras=("throughput_mbps", "count"),
+            falhas_registradas=("success", lambda s: (~s.astype(bool)).sum()),
         )
         .reset_index()
     )
+    agg["sucessos"] = agg["amostras"] - agg["falhas_registradas"]
+    agg["taxa_erro"] = 1 - (agg["sucessos"] / expected_runs)
+    agg["taxa_erro"] = agg["taxa_erro"].clip(lower=0.0, upper=1.0)
     agg.columns = [
         "cenario",
         "modo",
@@ -63,6 +66,8 @@ def summary_table(df: pd.DataFrame) -> pd.DataFrame:
         "taxa_erro",
         "retransmissoes_media",
         "amostras",
+        "sucessos",
+        "falhas_registradas",
     ]
     return agg
 
